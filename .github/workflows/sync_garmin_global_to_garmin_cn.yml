@@ -22,7 +22,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: Sync Garmin Global to Garmin CN
     permissions:
       contents: write
