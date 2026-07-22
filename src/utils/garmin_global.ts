@@ -53,11 +53,17 @@ export const getGaminGlobalClient = async (): Promise<GarminClientType> => {
                 try {
                     console.log('GarminGlobal: login by saved session');
                     await GCClient.loadToken(currentSession.oauth1, currentSession.oauth2);
+                    // loadToken only assigns tokens in memory; it never validates them.
+                    // Force a real request so a stale/expired session is detected here
+                    // and can trigger a re-login, instead of crashing later.
+                    await GCClient.getUserProfile();
+                    // Persist any token refreshed during the validation call above.
+                    await updateSessionToDB('GLOBAL', GCClient.exportToken());
                 } catch (e) {
                     // 只在登录默认session登录失败，catch到登录错误，需要重新登录时注册sessionChange事件
                     console.log('Warn: renew GarminGlobal session..');
                     await GCClient.login(GARMIN_GLOBAL_USERNAME, GARMIN_GLOBAL_PASSWORD);
-                    await updateSessionToDB('GLOBAL', GCClient.sessionJson);
+                    await updateSessionToDB('GLOBAL', GCClient.exportToken());
 
                 }
 

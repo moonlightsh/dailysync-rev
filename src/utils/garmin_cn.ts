@@ -58,10 +58,16 @@ export const getGaminCNClient = async (): Promise<GarminClientType> => {
                 try {
                     console.log('GarminCN: login by saved session');
                     await GCClient.loadToken(currentSession.oauth1, currentSession.oauth2);
+                    // loadToken only assigns tokens in memory; it never validates them.
+                    // Force a real request so a stale/expired session is detected here
+                    // and can trigger a re-login, instead of crashing later.
+                    await GCClient.getUserProfile();
+                    // Persist any token refreshed during the validation call above.
+                    await updateSessionToDB('CN', GCClient.exportToken());
                 } catch (e) {
                     console.log('Warn: renew  GarminCN Session..');
                     await GCClient.login(GARMIN_USERNAME, GARMIN_PASSWORD);
-                    await updateSessionToDB('CN', GCClient.sessionJson);
+                    await updateSessionToDB('CN', GCClient.exportToken());
                 }
 
             }
